@@ -34,10 +34,9 @@ tblproperties ("skip.header.line.count" = "1")'
 
 2. Dump the data inside the hdfs in the given schema location.
 
-load data local inpath ‘/home/cloudera/Desktop/AgentPerformance.csv’ into table
-agentperformance;
+load data local inpath ‘/tmp/hive_project1/AgentPerformance.csv’ into table agentperformance;
 
-load data local inpath ‘/home/cloudera/Desktop/AgentLogingReport.csv’ into table agentloging;
+load data local inpath ‘/tmp/hive_project1/AgentLogingReport.csv’ into table agentloging;
 
 3. List of all agents’ names.
 
@@ -71,6 +70,7 @@ avg(avgrating)>4.5;
 Select count(avgrating) from agentperformance where avgrating> 4.5;
 
 12. Average weekly response time for each agent.
+
 hive -e "with weekresponse as (select agentname,
 weekofyear(from_unixtime(unix_timestamp(date, 'MM/dd/yyyy'),'yyyy-MM-dd')) as
 week,\round((hour(avgresponsetime)*3600+minute(avgresponsetime)*60+second(avgr
@@ -79,6 +79,7 @@ select agentName, week, avg(responsetime) from weekresponse group by
 agentname,week";
 
 13.Average weekly resolution time for each agent.
+
 hive -e "with weekresolution as (
 select agentname,\ weekofyear(from_unixtime(unix_timestamp(Date, 'MM/dd/yyyy'),'yyyy-MM-
 dd')) as week,\round((hour(avgresolutiontime)*3600+minute(avgresolutiontime)*60+second(avgresolutiontime))/60,2) as resolutiontime\ from agentperformance);
@@ -89,6 +90,7 @@ select sum (totalchats), AgentName from AgentPerformance where totalfeedback! =0
 group by agentname
 
 15. Total contribution hour for each and every agent’s weekly basis.
+
 hive -e "with TotalContribution as (
 select agentname, \weekofyear(from_unixtime(unix_timestamp(Date, 'dd-MMM-
 yy'),'yyyy-MM-dd')) as week,\round((hour(Duration)*3600+minute(Duration)*60+second(Duration))/3600,2) as
@@ -98,6 +100,7 @@ agentname,week;
 
 16. Perform inner join, left join and right join based on the agent column and after joining the
 table and export that data into your local system.
+
 INNER JOIN
 Select agentperformance.* , agentloging.* from agentperformance JOIN agentlogging ON
 (agentperformance.agentname =agentloging.agentname);
@@ -105,6 +108,7 @@ Exporting data into the local System
 insert overwrite local directory ‘/home/cloudera/Desktop/innerjoin.csv’ Select agentperformance.* ,
 agentloging.* from agentperformance JOIN agentlogging ON (agentperformance.agentname
 =agentloging.agentname);
+
 LEFT JOIN
 Select agentperformance.* , agentloging.* from agentperformance LEFT JOIN agentlogging ON
 (agentperformance.agentname =agentloging.agentname);
@@ -113,11 +117,8 @@ insert overwrite local directory ‘/home/cloudera/Desktop/leftjoin.csv’ Selec
 agentloging.* from agentperformance JOIN agentlogging ON (agentperformance.agentname
 =agentloging.agentname);
 hive -e "with TotalContribution as (
-
 select agentname, \weekofyear(from_unixtime(unix_timestamp(Date, 'dd-MMM-
-yy'),'yyyy-MM-dd')) as week,\
-
-round((hour(Duration)*3600+minute(Duration)*60+second(Duration))/3600,2) as
+yy'),'yyyy-MM-dd')) as week,\round((hour(Duration)*3600+minute(Duration)*60+second(Duration))/3600,2) as
 hours \ from AgentLogingReport)
 select agentname, week, sum(hours) from TotalContribution group by
 agentname,week;
